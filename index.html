@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="Real-Time Dynamics-Based Torque-Sampling MPPI for Compliant and Force-Aware Manipulation — IEEE/RSJ IROS 2026">
+  <meta name="keywords" content="MPPI, Torque Sampling, Rigid-Body Dynamics, Force Control, Compliance, Hybrid Motion-Force Control, Robot Manipulator, Real-Time MPC, GPU">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dynamics-Based Torque-Sampling MPPI</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+
+  <style>
+    /* Global scale down */
+    html {
+      font-size: 13px;
+    }
+    .container.is-max-desktop {
+      max-width: 960px !important;
+    }
+    .section {
+      padding: 1.5rem 1.5rem !important;
+    }
+    .hero-body {
+      padding: 1.5rem 1.5rem !important;
+    }
+    h1.title.is-2 {
+      font-size: 2.5rem !important;
+    }
+    /* Stat boxes */
+    .stat-box {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      margin: 0.4rem;
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #363636;
+      line-height: 1.1;
+    }
+    .stat-unit {
+      font-size: 1rem;
+      color: #555;
+    }
+    .stat-desc {
+      font-size: 0.8rem;
+      color: #777;
+      margin-top: 0.3rem;
+    }
+    .method-box {
+      border: 1px solid #dbdbdb;
+      border-radius: 8px;
+      padding: 1.2rem;
+      height: 100%;
+    }
+    .method-box .title {
+      color: #363636;
+    }
+    .comparison-highlight {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 8px;
+      padding: 1.2rem;
+    }
+    .tag.is-iros {
+      background-color: #c0392b;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          Affiliations
+        </a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="https://sites.google.com/view/kist-arc/home">
+            Advanced Robotics Control Lab (KIST)
+          </a>
+          <a class="navbar-item" href="https://ee.korea.ac.kr">
+            Korea University EE
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+
+          <div class="tags is-centered" style="margin-bottom: 0.5rem;">
+            <span class="tag is-iros is-medium">IEEE/RSJ IROS 2026</span>
+            <span class="tag is-light is-medium">Pittsburgh, USA</span>
+            <span class="tag is-light is-medium">Accepted</span>
+          </div>
+
+          <h1 class="title is-2 publication-title">
+            Real-Time Dynamics-Based Torque-Sampling MPPI for Compliant and Force-Aware Manipulation
+          </h1>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Euncheol Im<sup>1,2</sup>,</span>
+            <span class="author-block">Taehyun Kim<sup>1,2</sup>,</span>
+            <span class="author-block">Yonghwan Oh<sup>1</sup>,</span>
+            <span class="author-block">Myo-Taeg Lim<sup>2</sup>,</span>
+            <span class="author-block">Yisoo Lee<sup>1,&dagger;</sup></span>
+          </div>
+
+          <div class="is-size-6 publication-authors" style="margin-top: 0.3rem; color: #888;">
+            <span>&dagger; Corresponding author</span>
+          </div>
+
+          <div class="is-size-6 publication-authors" style="margin-top: 0.5rem;">
+            <span class="author-block"><sup>1</sup>Korea Institute of Science and Technology (KIST),</span>
+            <span class="author-block"><sup>2</sup>Korea University</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF / Paper Link -->
+              <span class="link-block">
+                <a href="#"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                    <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <!-- Video Link -->
+              <span class="link-block">
+                <a href="#"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                    <i class="fab fa-youtube"></i>
+                  </span>
+                  <span>Video</span>
+                </a>
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Teaser Video -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <!-- TODO -->
+      <p class="has-text-centered" style="color:#c0392b; font-weight:600; margin-bottom:0.75rem;">
+        TODO: This is a placeholder video — an edited version will be re-uploaded.
+      </p>
+      <video autoplay controls muted loop playsinline width="100%">
+        <source src="./static/videos/Total_Video_materials_V5.mp4" type="video/mp4">
+      </video>
+      <h2 class="subtitle has-text-centered" style="margin-top: 1rem;">
+        A <strong>dynamics-based torque-sampling MPPI</strong> framework that solves full rigid-body dynamics inside
+        a real-time MPC loop, enabling <strong>compliant and force-aware manipulation</strong> at a
+        <strong>166 Hz</strong> solver update rate with a <strong>0.18 s</strong> prediction horizon on a 7-DoF manipulator.
+      </h2>
+    </div>
+  </div>
+</section>
+
+
+<!-- Key Results Statistics -->
+<section class="section" style="padding-top: 1rem; padding-bottom: 1rem;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+
+      <div class="column">
+        <div class="stat-box">
+          <div class="stat-number">166<span class="stat-unit"> Hz</span></div>
+          <div class="stat-desc">Solver update rate<br>(real robot, full rigid-body dynamics)</div>
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="stat-box">
+          <div class="stat-number">0.18<span class="stat-unit"> s</span></div>
+          <div class="stat-desc">Prediction horizon<br>at torque level</div>
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="stat-box">
+          <div class="stat-number">1st</div>
+          <div class="stat-desc">MPPI manipulation with<br>explicit full rigid-body dynamics</div>
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="stat-box">
+          <div class="stat-number">1.80<span class="stat-unit"> N</span></div>
+          <div class="stat-desc">Force tracking MAE<br>on a curved contact surface</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- Abstract -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            This study proposes a novel Model Predictive Path Integral (MPPI)-based task-space control
+            framework. The proposed framework <strong>explicitly solves rigid-body dynamics within a
+            real-time MPC formulation</strong> and enforces safety constraints, enabling accurate motion
+            and force control that yields <strong>compliant behaviors</strong> for safe and effective physical
+            interaction of robotic manipulators in unstructured environments.
+          </p>
+          <p>
+            By leveraging MPPI, the framework efficiently handles nonlinear dynamics that are difficult
+            to solve with conventional MPC approaches in real time. Furthermore, we develop a
+            <strong>torque-sampling-based control architecture</strong> that enables efficient exploitation
+            of GPU-based parallelization, resulting in effective compliant and force-aware behaviors.
+          </p>
+          <p>
+            As a result, the proposed framework achieves a solver update rate of over <strong>166 Hz</strong>
+            with a <strong>0.18 s</strong> prediction horizon, and its performance is validated through
+            real-world experiments on a <strong>7-DoF manipulator (Franka Research 3)</strong>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Method -->
+<section class="section" style="background: #fafafa;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Proposed Method</h2>
+
+    <!-- Overview Figure -->
+    <div class="columns is-centered" style="margin-bottom: 2rem;">
+      <div class="column is-full-width has-text-centered">
+        <figure class="image">
+          <img src="./static/images/structure.png" alt="Overview of the proposed torque-sampling MPPI control structure">
+        </figure>
+        <p class="is-size-7 has-text-centered" style="color: #888; margin-top: 0.5rem;">
+          Control structure of the proposed method. Orange blocks run on the GPU (parallel rollouts with analytic
+          dynamics); green blocks run on the CPU. Each MPPI Step Update Block (MSUB) computes forward dynamics and
+          cost at every timestep for every rollout.
+        </p>
+      </div>
+    </div>
+
+    <div class="columns is-centered">
+
+      <!-- Dynamics-Based Torque Sampling -->
+      <div class="column">
+        <div class="method-box">
+          <h3 class="title is-4">Dynamics-Based Torque Sampling</h3>
+          <div class="content has-text-justified">
+            <p>
+              Unlike conventional MPPI for manipulation that samples in joint space
+              (positions, velocities, or accelerations), the proposed method
+              <strong>directly samples and optimizes joint torques</strong>
+              (u<sub>k,t</sub> = &tau;<sub>t</sub> + &delta;&tau;<sub>k,t</sub>).
+            </p>
+            <p>
+              Future states are predicted by solving <strong>analytic forward dynamics</strong>
+              <em>M(q)q̈ + h(q,q̇) = &tau; + &tau;<sub>ext</sub></em> at every timestep of each rollout,
+              integrated with an explicit Euler scheme.
+            </p>
+            <p><strong>Key advantages:</strong></p>
+            <ul>
+              <li>First MPPI manipulation framework with <strong>explicit full rigid-body dynamics</strong></li>
+              <li>Torque-level control yields <strong>inherent compliance</strong> during physical interaction</li>
+              <li>Enables seamless integration of <strong>force-related objectives</strong> in the optimization loop</li>
+            </ul>
+            <figure class="image" style="margin-top: 1rem;">
+              <img src="./static/images/prbdl.png" alt="GPU-parallelized analytic dynamics solver block">
+            </figure>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hybrid Motion-Force Cost + GPU Solver -->
+      <div class="column">
+        <div class="method-box">
+          <h3 class="title is-4">Hybrid Motion–Force Cost &amp; GPU Solver</h3>
+          <div class="content has-text-justified">
+            <p>
+              The running cost combines <strong>motion</strong> (SE(3) position + orientation),
+              <strong>force</strong>, and <strong>constraint</strong> terms:
+              <em>&ell; = C<sub>motion</sub> + C<sub>force</sub> + C<sub>constraint</sub></em>.
+            </p>
+            <p>
+              End-effector force is estimated through the <strong>dynamically consistent generalized
+              inverse</strong> (F<sub>ee</sub> = J̄<sup>T</sup>&tau;), decoupling task-space force from
+              null-space torques. Diagonal weights select axes for hybrid motion/force control.
+            </p>
+            <p><strong>Key advantages:</strong></p>
+            <ul>
+              <li>Custom <strong>CUDA kernels</strong> evaluate thousands of rollouts in parallel</li>
+              <li>Robot parameters stored in <strong>GPU constant memory</strong> (no inter-thread comms)</li>
+              <li>Joint-limit, posture, and <strong>collision costs</strong> enforce safety &amp; feasibility</li>
+              <li>Up to <strong>1,024 rollouts</strong> in real time (K = 128 used in experiments)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- Experiments -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 has-text-centered">Experiments</h2>
+    <p class="has-text-centered" style="margin-bottom: 2rem; color: #555;">
+      Validated on a 7-DoF Franka Research 3 (FR3). GPU MPPI on a desktop PC (i9-10900KF, RTX 2070 Super),
+      bridged to the robot via an Intel NUC over the Franka Control Interface (1 kHz) and ZeroMQ.
+    </p>
+
+    <!-- Comparison with baseline -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h3 class="title is-4">Comparison with Baseline</h3>
+        <p style="margin-bottom: 1rem; color: #555;">
+          Baseline: our prior <strong>Single-Instance Sampling MPPI</strong> (IEEE T-RO 2025), a kinematic-level
+          task-space controller.
+        </p>
+        <div class="columns is-vcentered">
+          <div class="column is-7">
+            <video autoplay controls muted loop playsinline width="100%">
+              <source src="./static/videos/compare_with_baseline.mp4" type="video/mp4">
+            </video>
+            <p class="is-size-7 has-text-centered" style="color: #888; margin-top: 0.4rem;">
+              Response to an external disturbance: baseline (kinematic) vs. proposed (torque-based).
+            </p>
+          </div>
+          <div class="column is-5">
+            <div class="comparison-highlight">
+              <h3 class="title is-4" style="color: white;">Compliance vs. Safety Lock</h3>
+              <div class="content" style="color: white;">
+                <p>
+                  When an external disturbance is applied, the <strong style="color:white;">kinematic baseline
+                  halts</strong> — its internal safety rules trigger a <strong style="color:white;">safety lock</strong>
+                  because the disturbance is treated as a violation.
+                </p>
+                <p>
+                  The proposed method is <strong style="color:white;">torque-based</strong>, so the robot
+                  <strong style="color:white;">complies with the disturbance</strong> instead of resisting it.
+                  No safety lock is triggered, and manipulation continues smoothly.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Free-space hybrid control -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h3 class="title is-4">Hybrid Motion–Force Control with Disturbances (Free Space)</h3>
+        <div class="columns is-vcentered">
+          <div class="column is-5">
+            <div class="content has-text-justified">
+              <p>
+                A step reference (F<sub>x,d</sub> = 10 N along x, with target y/z position and fixed
+                orientation) under repeated external pushes at the end-effector:
+              </p>
+              <ul>
+                <li>Mean position error (converged): <strong>0.0137 m</strong></li>
+                <li>Mean orientation error: <strong>0.0208 rad</strong></li>
+                <li>Robot responds <strong>compliantly</strong> to pushes and returns to the desired force/pose</li>
+              </ul>
+              <p>
+                Force is estimated purely from torque projection (F<sub>ee</sub> = J̄<sup>T</sup>&tau;) —
+                <strong>no force/torque sensor</strong>.
+              </p>
+            </div>
+          </div>
+          <div class="column is-7">
+            <video autoplay controls muted loop playsinline width="100%">
+              <source src="./static/videos/hybrid_force_freespace.mp4" type="video/mp4">
+            </video>
+            <p class="is-size-7 has-text-centered" style="color: #888; margin-top: 0.4rem;">
+              Free-space hybrid motion–force control under external perturbations.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Maintained contact -->
+    <div class="columns is-centered" style="margin-top: 2.5rem;">
+      <div class="column is-full-width">
+        <h3 class="title is-4">Hybrid Motion–Force Control under Maintained Contact</h3>
+        <div class="columns is-vcentered">
+          <div class="column is-7">
+            <video autoplay controls muted loop playsinline width="100%">
+              <source src="./static/videos/hybrid_force_contact_with_surface.mp4" type="video/mp4">
+            </video>
+            <p class="is-size-7 has-text-centered" style="color: #888; margin-top: 0.4rem;">
+              Maintaining contact and sliding along a curved surface (cylindrical water bottle).
+            </p>
+          </div>
+          <div class="column is-5">
+            <div class="content has-text-justified">
+              <p>
+                Force control along z (F<sub>z,d</sub> = &minus;4 N) while the y-axis follows a linear
+                trajectory on a <strong>curved surface</strong> with no prior geometric model:
+              </p>
+              <ul>
+                <li>Force tracking MAE: <strong>1.80 N</strong></li>
+                <li>Position error: <strong>0.012 m</strong>, orientation: <strong>0.0921 rad</strong></li>
+                <li>Force-aware behavior <strong>emerges from torque sampling</strong>, no force sensor</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dynamic obstacle avoidance -->
+    <div class="columns is-centered" style="margin-top: 2.5rem;">
+      <div class="column is-full-width">
+        <h3 class="title is-4">Dynamic Obstacle Avoidance</h3>
+        <div class="columns is-vcentered">
+          <div class="column is-5">
+            <div class="content has-text-justified">
+              <p>
+                While exerting a constant force (F<sub>y,d</sub> = &minus;4 N), a moving obstacle
+                (tracked by an Intel RealSense L515) intrudes on the robot's path.
+              </p>
+              <ul>
+                <li>Robot <strong>reactively moves away</strong>, temporarily overriding the force command</li>
+                <li>Safety prioritized via a high <strong>collision-cost weight</strong></li>
+                <li>Demonstrates real-time reactivity in dynamic environments</li>
+              </ul>
+            </div>
+          </div>
+          <div class="column is-7">
+            <video autoplay controls muted loop playsinline width="100%">
+              <source src="./static/videos/dynamic_obstacle_avoidance.mp4" type="video/mp4">
+            </video>
+            <p class="is-size-7 has-text-centered" style="color: #888; margin-top: 0.4rem;">
+              Collision avoidance against a dynamic obstacle during force control.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- BibTeX -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@inproceedings{im2026torquesampling,
+  author    = {Im, Euncheol and Kim, Taehyun and Oh, Yonghwan and Lim, Myo-Taeg and Lee, Yisoo},
+  title     = {Real-Time Dynamics-Based Torque-Sampling {MPPI} for Compliant and Force-Aware Manipulation},
+  booktitle = {2026 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  year      = {2026},
+}</code></pre>
+  </div>
+</section>
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link" href="#">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content has-text-centered">
+          <p>
+            This website is licensed under a <a rel="license"
+                                                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+          <p>
+            Website template borrowed from <a href="https://nerfies.github.io">Nerfies</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
