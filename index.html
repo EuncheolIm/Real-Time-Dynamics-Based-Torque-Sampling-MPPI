@@ -186,13 +186,13 @@
 <section class="hero teaser">
   <div class="container is-max-desktop">
     <div class="hero-body">
-      <!-- TODO -->
-      <p class="has-text-centered" style="color:#c0392b; font-weight:600; margin-bottom:0.75rem;">
-        TODO: This is a placeholder video — an edited version will be re-uploaded.
-      </p>
-      <video autoplay controls muted loop playsinline width="100%">
-        <source src="./static/videos/Total_Video_materials_V5.mp4" type="video/mp4">
-      </video>
+      <!-- TODO: replace this placeholder block with the main teaser (local mp4) or a YouTube embed -->
+      <div style="border: 2px dashed #dbdbdb; border-radius: 10px; padding: 3rem 1rem;
+                  display: flex; flex-direction: column; align-items: center; justify-content: center;
+                  color: #999; background: #f7f7f7; min-height: 220px;">
+        <i class="fab fa-youtube" style="font-size: 2.5rem; margin-bottom: 0.6rem;"></i>
+        <p style="font-weight: 700; margin: 0;">Video coming soon</p>
+      </div>
       <h2 class="subtitle has-text-centered" style="margin-top: 1rem;">
         A <strong>dynamics-based torque-sampling MPPI</strong> framework that solves full rigid-body dynamics inside
         a real-time MPC loop, enabling <strong>compliant and force-aware manipulation</strong> at a
@@ -368,8 +368,9 @@
       <div class="column is-full-width">
         <h3 class="title is-4">Comparison with Baseline</h3>
         <p style="margin-bottom: 1rem; color: #555;">
-          Baseline: our prior <strong>Single-Instance Sampling MPPI</strong> (IEEE T-RO 2025), a kinematic-level
-          task-space controller.
+          Baseline: a <strong>kinematic-based MPPI</strong>
+          (<a href="https://doi.org/10.1109/TRO.2025.3626660" target="_blank">Kim <em>et al.</em>, IEEE T-RO 2025</a>)
+          that performs task-space control at the kinematic level.
         </p>
         <div class="columns is-vcentered">
           <div class="column is-7">
